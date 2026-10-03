@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Expense Book</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;background:#f5f7fb;color:#172033}
+header{background:#172033;color:#fff;padding:18px;text-align:center}header h1{margin:0;font-size:24px}
+nav{display:flex;overflow:auto;background:#fff;border-bottom:1px solid #ddd;position:sticky;top:0;z-index:5}
+nav button{flex:1;min-width:100px;border:0;background:#fff;padding:13px 8px;font-weight:600;color:#566}
+nav button.active{color:#172033;border-bottom:3px solid #172033}
+main{max-width:900px;margin:auto;padding:15px}.page{display:none}.page.active{display:block}
+.cards{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.card{background:#fff;border-radius:14px;padding:16px;box-shadow:0 2px 10px #0000000b}.card small{color:#687080}.amount{font-size:22px;font-weight:700;margin-top:6px}
+form{background:#fff;padding:16px;border-radius:14px;margin:12px 0;box-shadow:0 2px 10px #0000000b}
+input,select,textarea{width:100%;padding:12px;margin:6px 0 10px;border:1px solid #d6dae2;border-radius:9px;font-size:15px}
+button.primary{background:#172033;color:white;border:0;padding:12px 16px;border-radius:9px;font-weight:700}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}.item{background:#fff;border-radius:12px;padding:13px;margin:9px 0;box-shadow:0 2px 8px #0000000b}
+.item strong{font-size:16px}.muted{color:#687080;font-size:13px}.actions{display:flex;gap:7px;margin-top:9px;flex-wrap:wrap}
+.actions a,.actions button{padding:8px 10px;border-radius:8px;border:0;text-decoration:none;font-size:13px;background:#edf0f5;color:#172033}
+.actions a.whatsapp{background:#dff7e8}.actions a.call{background:#e6f0ff}
+.danger{color:#b42318}.success{color:#137333}.section-title{display:flex;justify-content:space-between;align-items:center}
+@media(max-width:600px){.row{grid-template-columns:1fr}.cards{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+<header><h1>📒 My Expense Book</h1></header>
+<nav>
+<button class="active" onclick="show('home',this)">Dashboard</button>
+<button onclick="show('expenses',this)">Expenses</button>
+<button onclick="show('receivable',this)">Get Money</button>
+<button onclick="show('payable',this)">Give Money</button>
+<button onclick="show('emi',this)">EMI</button>
+</nav>
+<main>
+<section id="home" class="page active">
+<div class="cards">
+<div class="card"><small>Total Income</small><div class="amount" id="incomeTotal">₹0</div></div>
+<div class="card"><small>Total Expense</small><div class="amount" id="expenseTotal">₹0</div></div>
+<div class="card"><small>Get Money</small><div class="amount success" id="getTotal">₹0</div></div>
+<div class="card"><small>Give Money</small><div class="amount danger" id="giveTotal">₹0</div></div>
+</div>
+<div class="card" style="margin-top:12px"><small>Current Balance</small><div class="amount" id="balance">₹0</div></div>
+<div class="card" style="margin-top:12px"><small>Pending EMI</small><div class="amount" id="emiTotal">₹0</div></div>
+</section>
+
+<section id="expenses" class="page">
+<div class="section-title"><h2>Expenses</h2></div>
+<form onsubmit="addExpense(event)">
+<div class="row"><div><label>Amount</label><input id="exAmount" type="number" min="0" required></div>
+<div><label>Type</label><select id="exType"><option>Expense</option><option>Income</option></select></div></div>
+<label>Category</label><select id="exCat"><option>Food</option><option>Travel</option><option>Shopping</option><option>Bills</option><option>EMI</option><option>Other</option></select>
+<label>Date</label><input id="exDate" type="date" required>
+<label>Note</label><input id="exNote" placeholder="Optional">
+<button class="primary">Add</button></form>
+<div id="expenseList"></div>
+</section>
+
+<section id="receivable" class="page">
+<h2>💰 Get Money</h2>
+<form onsubmit="addPerson(event,'receivable')">
+<label>Name</label><input id="rName" required><label>Phone Number</label><input id="rPhone" type="tel" required>
+<div class="row"><div><label>Amount</label><input id="rAmount" type="number" min="0" required></div><div><label>Due Date</label><input id="rDate" type="date"></div></div>
+<label>Note</label><input id="rNote"><button class="primary">Add</button></form>
+<div id="receivableList"></div>
+</section>
+
+<section id="payable" class="page">
+<h2>💸 Give Money</h2>
+<form onsubmit="addPerson(event,'payable')">
+<label>Name</label><input id="pName" required><label>Phone Number</label><input id="pPhone" type="tel" required>
+<div class="row"><div><label>Amount</label><input id="pAmount" type="number" min="0" required></div><div><label>Due Date</label><input id="pDate" type="date"></div></div>
+<label>Note</label><input id="pNote"><button class="primary">Add</button></form>
+<div id="payableList"></div>
+</section>
+
+<section id="emi" class="page">
+<h2>🏦 EMI Tracker</h2>
+<form onsubmit="addEMI(event)">
+<label>Loan / EMI Name</label><input id="emiName" required>
+<div class="row"><div><label>Monthly EMI</label><input id="emiAmount" type="number" min="0" required></div><div><label>Due Date</label><input id="emiDate" type="date" required></div></div>
+<label>Total Remaining Amount</label><input id="emiRemain" type="number" min="0" required>
+<button class="primary">Add EMI</button></form>
+<div id="emiList"></div>
+</section>
+</main>
+<script>
+const key='myExpenseBook_v1';
+let data=JSON.parse(localStorage.getItem(key)||'{"expenses":[],"receivable":[],"payable":[],"emi":[]}');
+const money=n=>'₹'+Number(n||0).toLocaleString('en-IN');
+const save=()=>{localStorage.setItem(key,JSON.stringify(data));render()};
+function show(id,btn){document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));document.getElementById(id).classList.add('active');document.querySelectorAll('nav button').forEach(x=>x.classList.remove('active'));btn.classList.add('active');}
+function addExpense(e){e.preventDefault();data.expenses.push({id:Date.now(),amount:+exAmount.value,type:exType.value,cat:exCat.value,date:exDate.value,note:exNote.value});e.target.reset();save()}
+function del(type,id){data[type]=data[type].filter(x=>x.id!==id);save()}
+function addPerson(e,type){e.preventDefault();let pre=type==='receivable'?'r':'p';data[type].push({id:Date.now(),name:document.getElementById(pre+'Name').value,phone:document.getElementById(pre+'Phone').value.replace(/\D/g,''),amount:+document.getElementById(pre+'Amount').value,date:document.getElementById(pre+'Date').value,note:document.getElementById(pre+'Note').value});e.target.reset();save()}
+function addEMI(e){e.preventDefault();data.emi.push({id:Date.now(),name:emiName.value,amount:+emiAmount.value,date:emiDate.value,remain:+emiRemain.value,paid:false});e.target.reset();save()}
+function msg(x,type){let text=type==='receivable'?`Hi ${x.name}, reminder: ₹${x.amount} is due to me.`:`Hi ${x.name}, reminder: I need to pay ₹${x.amount}.`;return `https://wa.me/${x.phone}?text=${encodeURIComponent(text)}`}
+function render(){
+let inc=data.expenses.filter(x=>x.type==='Income').reduce((a,x)=>a+x.amount,0), exp=data.expenses.filter(x=>x.type==='Expense').reduce((a,x)=>a+x.amount,0);
+let get=data.receivable.reduce((a,x)=>a+x.amount,0), give=data.payable.reduce((a,x)=>a+x.amount,0), emi=data.emi.filter(x=>!x.paid).reduce((a,x)=>a+x.amount,0);
+incomeTotal.textContent=money(inc);expenseTotal.textContent=money(exp);getTotal.textContent=money(get);giveTotal.textContent=money(give);balance.textContent=money(inc-exp);emiTotal.textContent=money(emi);
+expenseList.innerHTML=data.expenses.slice().reverse().map(x=>`<div class=item><strong>${money(x.amount)} — ${x.type}</strong><div class=muted>${x.cat} • ${x.date||''} ${x.note?'• '+x.note:''}</div><div class=actions><button onclick="del('expenses',${x.id})">Delete</button></div></div>`).join('')||'<p class=muted>No records yet.</p>';
+for(const type of ['receivable','payable']){let el=document.getElementById(type+'List');el.innerHTML=data[type].slice().reverse().map(x=>`<div class=item><strong>${x.name} — ${money(x.amount)}</strong><div class=muted>${x.phone} ${x.date?'• Due '+x.date:''} ${x.note?'• '+x.note:''}</div><div class=actions><a class=whatsapp target=_blank href="${msg(x,type)}">WhatsApp</a><a class=call href="tel:${x.phone}">Call</a><button onclick="del('${type}',${x.id})">Delete</button></div></div>`).join('')||'<p class=muted>No records yet.</p>'}
+emiList.innerHTML=data.emi.slice().reverse().map(x=>`<div class=item><strong>${x.name} — ${money(x.amount)}/month</strong><div class=muted>Due ${x.date} • Remaining ${money(x.remain)}</div><div class=actions><button onclick="payEMI(${x.id})">${x.paid?'Mark Pending':'Mark Paid'}</button><button onclick="del('emi',${x.id})">Delete</button></div></div>`).join('')||'<p class=muted>No EMI records yet.</p>';
+}
+function payEMI(id){let x=data.emi.find(x=>x.id===id);if(x){x.paid=!x.paid;save()}}
+render();
+</script>
+</body>
+</html>
